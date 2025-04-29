@@ -1,8 +1,16 @@
 const pool = require('../config/database');
 
 const getProdutos = async () => {
-    const result = await pool.query("SELECT * FROM produtos");
-    return result.rows;
+    try {
+        const result = await pool.query(`
+            SELECT * 
+            FROM produtos
+        `);
+        console.log('Produtos encontrados:', result.rows); 
+    } catch (error) {
+        console.error('Erro ao buscar produtos:', error); 
+        throw error;
+    }
 };
 
 const getProdutosById = async (id) => {
@@ -25,9 +33,24 @@ const deleteProdutos = async (id) => {
     return { message: 'Produto deletado com sucesso' };
 }
 
-const updateProdutos = async (nome, descricao, preco, marca_id) => {
-    const result = await pool.query("UPDATE produtos SET nome = $1, descricao = $2, preco = $3, marca_id = $4 WHERE id = $5 RETURNING *", [nome, descricao, preco, marca_id, id]);
-    return result.rows[0];
+const updateProdutos = async (id, nome, descricao, preco, marca_id) => {
+    try {
+        const result = await pool.query(`
+            UPDATE produtos
+            SET nome = $1, descricao = $2, preco = $3, marca_id = $4
+            WHERE id = $5
+            RETURNING *
+        `, [nome, descricao, preco, marca_id, id]);
+
+        if (result.rowCount === 0) {
+            return null; // Produto não encontrado
+        }
+
+        return result.rows[0];
+    } catch (error) {
+        console.error('Erro ao atualizar produto no banco de dados:', error); // Log do erro
+        throw error;
+    }
 };
 
 module.exports = { getProdutos, getProdutosById, createProdutos, deleteProdutos, updateProdutos };

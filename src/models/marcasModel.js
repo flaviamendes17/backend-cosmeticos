@@ -1,21 +1,16 @@
 const pool = require('../config/database');
 
-const getMarcas = async (nome) => {
-    if (!nome) {
+const getMarcas = async () => {
+    try {
         const result = await pool.query(`
-            SELECT marcas.* 
+            SELECT * 
             FROM marcas
-            LEFT JOIN marcas ON marcas_id = marcas.id
         `);
+        console.log('Marcas encontradas no banco de dados:', result.rows); // Log para depuração
         return result.rows;
-    } else {
-        const result = await pool.query(`
-            SELECT marcas.* 
-            FROM marcas
-            LEFT JOIN marcas ON marcas_id = marcas.id
-            WHERE nome ILIKE $1
-        `, [`%${nome}%`]);
-        return result.rows;
+    } catch (error) {
+        console.error('Erro ao buscar marcas no banco de dados:', error); // Log do erro
+        throw error;
     }
 };
 
@@ -45,10 +40,23 @@ const deleteMarcas = async (id) => {
 };
 
 const updateMarcas = async (id, nome, localizacao) => {
-    const result = await pool.query(`UPDATE marcas SET nome = $1, localizacao = $2 
-        WHERE id = $3 RETURNING *`, [nome, localizacao, id]
-    );
-    return result.rows[0];
+    try {
+        const result = await pool.query(`
+            UPDATE marcas
+            SET nome = $1, localizacao = $2
+            WHERE id = $3
+            RETURNING *
+        `, [nome, localizacao, id]);
+
+        if (result.rowCount === 0) {
+            return null; // Marca não encontrada
+        }
+
+        return result.rows[0];
+    } catch (error) {
+        console.error('Erro ao atualizar marca no banco de dados:', error); // Log do erro
+        throw error;
+    }
 };
 
-module.exports = { getMarcas, getMarcasById, createMarcas, deleteMarcas, updateMarcas };
+module.exports = { getMarcas, getMarcasById, createMarcas, deleteMarcas, updateMarcas};
