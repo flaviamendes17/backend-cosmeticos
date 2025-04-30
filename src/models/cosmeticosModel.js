@@ -14,8 +14,13 @@ const getProdutos = async () => {
 };
 
 const getProdutosById = async (id) => {
-    const result = await pool.query("SELECT * FROM produtos WHERE id = $1", [id]);
-    return result.rows[0];
+    try {
+        const result = await pool.query("SELECT * FROM produtos WHERE id = $1", [id]);
+        return result.rows[0];
+    } catch (error) {
+        console.error('Erro no banco ao buscar produto por ID:', error); // <-- ADICIONE ISSO
+        throw error;
+    }
 };
 
 const createProdutos = async (nome, descricao, preco, marca_id) => {

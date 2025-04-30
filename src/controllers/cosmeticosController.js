@@ -1,13 +1,39 @@
 const produtosModel = require('../models/cosmeticosModel');
 
 const getAllProdutos = async (req, res) => {
-    try {
-        const produtos = await produtosModel.getProdutos();
-        res.json(produtos);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar produtos' });
+    const { nome, marca, preco_min, preco_max } = req.query;
+  
+    let query = 'SELECT * FROM produtos WHERE 1=1';
+    const params = [];
+  
+    if (nome) {
+      params.push(`%${nome}%`);
+      query += ` AND nome ILIKE $${params.length}`;
     }
-};
+  
+    if (marca) {
+      params.push(marca);
+      query += ` AND marca = $${params.length}`;
+    }
+  
+    if (preco_min) {
+      params.push(preco_min);
+      query += ` AND preco >= $${params.length}`;
+    }
+  
+    if (preco_max) {
+      params.push(preco_max);
+      query += ` AND preco <= $${params.length}`;
+    }
+  
+    try {
+      const resultado = await pool.query(query, params);
+      res.json(resultado.rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro ao buscar produto' });
+    }
+  };
 
 const getProdutos = async (req, res) => {
     try {
@@ -17,6 +43,7 @@ const getProdutos = async (req, res) => {
         }
         res.json(produtos);
     } catch (error) {
+        console.error('Erro ao buscar produto por ID:', error); // <-- ADICIONE ISSO
         res.status(500).json({ error: 'Erro ao buscar produto' });
     }
 };
